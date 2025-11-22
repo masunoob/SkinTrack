@@ -73,30 +73,6 @@ export const useSkinRecordsStore = defineStore('skinRecords', () => {
     }
   }
 
-  // サンプル記録を設定
-  function setSampleRecords() {
-    records.value = [
-      {
-        id: 1,
-        date: '2025-01-01',
-        memo: 'テスト記録',
-        image: 'https://placehold.jp/150x150.png',
-      },
-      {
-        id: 2,
-        date: '2025-01-02',
-        memo: 'テスト記録2',
-        image: 'https://via.placeholder.com/150',
-      },
-      {
-        id: 3,
-        date: '2025-01-03',
-        memo: 'テスト記録3',
-        image: 'https://via.placeholder.com/150',
-      },
-    ]
-  }
-
   return {
     records,
     isLoading,
@@ -105,6 +81,5 @@ export const useSkinRecordsStore = defineStore('skinRecords', () => {
     fetchRecord,
     createRecord,
     deleteRecord,
-    setSampleRecords,
   }
 })

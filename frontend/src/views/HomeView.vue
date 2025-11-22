@@ -18,10 +18,15 @@
           </template>
           <div class="card-body">
             <img 
-              src="https://placehold.jp/500x500.png" 
+              v-if="record.image"
+              :src="getImageUrl(record.image)" 
               alt="記録画像" 
               class="card-image"
+              @error="handleImageError"
             />
+            <div v-else class="card-image-placeholder">
+              <span>画像なし</span>
+            </div>
           </div>
           <template #footer>
             <div>
@@ -43,8 +48,8 @@
             v-model:file-list="createForm.images"
             drag
             :auto-upload="false"
-            multiple
-            :on-change="handleImageChange"
+            :limit="1"
+            accept="image/*"
             style="width:100%;"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
@@ -70,6 +75,7 @@
 import { useSkinRecordsStore } from '@/stores/skinRecords'
 import { onMounted, ref } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const skinRecordsStore = useSkinRecordsStore()
 const isCreateModalVisible = ref(false)
@@ -80,27 +86,49 @@ const createForm = ref({
 })
 
 onMounted(() => {
-  skinRecordsStore.setSampleRecords()
+  skinRecordsStore.fetchRecords()
 })
 
-const handleCreateButtonClick = () => {
-
-  console.log(createForm.value)
-
-  isCreateModalVisible.value = false
-
-  // TODO: 登録処理を追加
-  // skinRecordsStore.createRecord(createForm.value)
+const handleCreateButtonClick = async () => {
+  console.log('Creating record with form:', createForm.value)
   
-  createForm.value = {
-    date: new Date(),
-    memo: '',
-    images: [],
+  try {
+    await skinRecordsStore.createRecord(createForm.value)
+    await skinRecordsStore.fetchRecords()
+    
+    ElMessage.success('記録を作成しました')
+
+    isCreateModalVisible.value = false
+    createForm.value = {
+      date: new Date(),
+      memo: '',
+      images: [],
+    }
+
+  } catch (error) {
+    console.error('Failed to create record:', error)
+    console.error('Error response:', error.response?.data)
+    ElMessage.error('記録の作成に失敗しました: ' + (error.response?.data?.detail || error.message))
   }
 }
 
-const handleImageChange = (file, fileList) => {
-  createForm.value.images = fileList
+// 画像URLを絶対URLに変換
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return ''
+  
+  // すでに完全なURLの場合はそのまま返す
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath
+  }
+  
+  // 相対パスの場合はバックエンドのベースURLを追加
+  return `http://localhost:8000${imagePath}`
+}
+
+// 画像読み込みエラー時の処理
+const handleImageError = (event) => {
+  console.error('Image load error:', event.target.src)
+  event.target.src = 'https://placehold.jp/500x500.png?text=画像エラー'
 }
 
 </script>
@@ -130,5 +158,16 @@ const handleImageChange = (file, fileList) => {
   aspect-ratio: 1 / 1; /* 正方形に統一（必要に応じて変更可能） */
   object-fit: cover; /* 画像をトリミングしてフィット */
   display: block;
+}
+
+.card-image-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  color: #999;
+  font-size: 1.2rem;
 }
 </style>
