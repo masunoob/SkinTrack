@@ -46,7 +46,7 @@
 
     <!-- アクションボタン -->
     <div class="action-buttons">
-      <el-button size="large" class="action-btn" @click="openCamera">
+      <el-button size="large" class="action-btn" @click="openCameraModal">
         <el-icon><Camera /></el-icon>
         <span>カメラで撮影</span>
       </el-button>
@@ -55,6 +55,12 @@
         <span>ファイル選択</span>
       </el-button>
     </div>
+
+    <!-- カメラモーダル -->
+    <SkinRecordCamera 
+      v-model="isCameraModalVisible" 
+      @capture="handleCameraCapture"
+    />
 
     <!-- 日付選択 -->
     <div class="form-section date-section">
@@ -113,6 +119,7 @@ import {
   Loading
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import SkinRecordCamera from '@/components/SkinRecordCamera.vue'
 
 const skinRecordsStore = useSkinRecordsStore()
 const router = useRouter()
@@ -128,6 +135,7 @@ const previewImage = ref('')
 const selectedFile = ref(null)
 const fileInputRef = ref(null)
 const isLoading = ref(false)
+const isCameraModalVisible = ref(false)
 
 // 送信可能かどうか
 const canSubmit = computed(() => {
@@ -162,12 +170,21 @@ const handleImageAreaClick = () => {
   }
 }
 
-// カメラを開く（モバイルの場合はカメラが起動）
-const openCamera = () => {
-  if (fileInputRef.value) {
-    fileInputRef.value.setAttribute('capture', 'environment')
-    fileInputRef.value.click()
+// カメラモーダルを開く
+const openCameraModal = () => {
+  isCameraModalVisible.value = true
+}
+
+// カメラで撮影した画像を受け取る
+const handleCameraCapture = (file) => {
+  selectedFile.value = file
+
+  // プレビュー画像を生成
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    previewImage.value = e.target.result
   }
+  reader.readAsDataURL(file)
 }
 
 // ファイル選択
