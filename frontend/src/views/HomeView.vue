@@ -4,7 +4,7 @@
 
     <!-- 記録作成フォーム -->
     <div class="flex justify-center">
-      <el-button type="primary" icon="Plus" @click="isCreateModalVisible = true">新規登録</el-button>
+      <el-button type="primary" icon="Plus" @click="goToCreateRecord">新規登録</el-button>
     </div>
 
     <!-- 記録一覧 -->
@@ -37,80 +37,25 @@
       </div>
     </div>
 
-    <!-- 記録作成モーダル -->
-    <el-dialog v-model="isCreateModalVisible" title="肌記録登録" width="500px">
-      <el-form :model="createForm" label-width="auto">
-        <el-form-item label="記録日">
-          <el-date-picker v-model="createForm.date" type="date" placeholder="記録日を選択" />
-        </el-form-item>
-        <el-form-item label="画像">
-          <el-upload 
-            v-model:file-list="createForm.images"
-            drag
-            :auto-upload="false"
-            :limit="1"
-            accept="image/*"
-            style="width:100%;"
-          >
-            <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-            <div class="el-upload__text">
-              Drop file here or <em>click to upload</em>
-            </div>
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="メモ">
-          <el-input v-model="createForm.memo" type="textarea" placeholder="メモを入力" style="width:100%;"/>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="isCreateModalVisible = false">キャンセル</el-button>
-        <el-button type="primary" @click="handleCreateButtonClick">作成</el-button>
-      </template>
-    </el-dialog>
-
   </main>
 </template>
 
 <script setup>
 import { useSkinRecordsStore } from '@/stores/skinRecords'
-import { onMounted, ref } from 'vue'
-import { UploadFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { onMounted } from 'vue'
 
 const skinRecordsStore = useSkinRecordsStore()
-const isCreateModalVisible = ref(false)
-const createForm = ref({
-  date: new Date(),
-  memo: '',
-  images: [],
-})
+
+const router = useRouter()
+
+const goToCreateRecord = () => {
+  router.push('/create')
+}
 
 onMounted(() => {
   skinRecordsStore.fetchRecords()
 })
-
-const handleCreateButtonClick = async () => {
-  console.log('Creating record with form:', createForm.value)
-  
-  try {
-    await skinRecordsStore.createRecord(createForm.value)
-    await skinRecordsStore.fetchRecords()
-    
-    ElMessage.success('記録を作成しました')
-
-    isCreateModalVisible.value = false
-    createForm.value = {
-      date: new Date(),
-      memo: '',
-      images: [],
-    }
-
-  } catch (error) {
-    console.error('Failed to create record:', error)
-    console.error('Error response:', error.response?.data)
-    ElMessage.error('記録の作成に失敗しました: ' + (error.response?.data?.detail || error.message))
-  }
-}
 
 // 画像URLを絶対URLに変換
 const getImageUrl = (imagePath) => {
